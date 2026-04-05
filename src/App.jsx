@@ -30,12 +30,6 @@ function App() {
       {/* Blur Overlay for Static Background Only */}
       <div className="fixed inset-0 backdrop-blur-lg bg-black/30 pointer-events-none z-[-2]"></div>
 
-      {/* 3D Animated Marquee Layer */}
-      <div className="fixed inset-0 pointer-events-none z-[-1]">
-        <Canvas camera={{ position: [0, 0, 0], fov: 50 }}>
-          <Scene />
-        </Canvas>
-      </div>
 
       {/* Comic Book Texture Overlays */}
       <div className="fixed inset-0 paper-grain pointer-events-none z-0"></div>
