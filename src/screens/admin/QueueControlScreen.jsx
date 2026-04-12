@@ -246,7 +246,7 @@ export default function QueueControlScreen() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-headline font-black text-3xl uppercase italic text-black">Queue Control</h1>
+        <h1 className="font-headline font-black text-3xl uppercase italic text-white">Queue Control</h1>
         <span className="font-body font-bold text-sm text-on-surface-variant">{queue.length} tracks</span>
       </div>
 

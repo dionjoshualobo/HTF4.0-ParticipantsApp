@@ -43,7 +43,7 @@ export default function CheckinMonitorScreen() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="font-headline font-black text-3xl uppercase italic text-black">Check-ins</h1>
+        <h1 className="font-headline font-black text-3xl uppercase italic text-white">Check-ins</h1>
         <div className="bg-primary-container border-4 border-black px-4 py-2 drop-block rounded-2xl">
           <span className="font-headline font-black text-2xl text-on-primary-container">{total}</span>
           <span className="font-body font-bold text-xs text-on-primary-container opacity-80 ml-1">in</span>

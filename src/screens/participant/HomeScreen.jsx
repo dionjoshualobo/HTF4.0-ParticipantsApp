@@ -13,7 +13,7 @@ const OPTIONS = [
   },
   {
     to: '/queue',
-    title: 'Song Queue',
+    title: 'Song Que',
     desc: 'Add songs to the party playlist',
     icon: '♫',
     bg: 'bg-tertiary-container',

@@ -44,7 +44,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="font-headline font-black text-3xl uppercase italic mb-6 text-black">Overview</h1>
+      <h1 className="font-headline font-black text-3xl uppercase italic mb-6 text-white">Overview</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {CARDS.map(c => {
           const val = stats?.[c.key] ?? 0
