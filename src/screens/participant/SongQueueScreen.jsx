@@ -102,7 +102,7 @@ export default function SongQueueScreen() {
 
   return (
     <div className="px-4 pt-6 pb-6 flex flex-col gap-4">
-      <h1 className="font-headline font-black text-2xl uppercase italic text-black">Song Queue</h1>
+      <h1 className="font-headline font-black text-2xl uppercase italic text-white">Song Queue</h1>
 
       {/* Now Playing */}
       <div className={`border-4 border-black p-4 drop-block rounded-3xl flex items-center gap-3 ${nowPlaying ? 'bg-primary-container' : 'bg-surface-container'}`}>
@@ -127,7 +127,7 @@ export default function SongQueueScreen() {
 
       {/* Queue list */}
       <div className="flex items-center justify-between">
-        <h2 className="font-headline font-black text-lg uppercase italic text-black">Up Next ({queue.length})</h2>
+        <h2 className="font-headline font-black text-lg uppercase italic text-white">Up Next ({queue.length})</h2>
       </div>
 
       {loading ? (

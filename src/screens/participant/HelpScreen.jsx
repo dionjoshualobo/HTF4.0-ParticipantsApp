@@ -91,10 +91,7 @@ export default function HelpScreen() {
   return (
     <div className="px-4 pt-6 pb-6 flex flex-col gap-4">
       <div>
-        <h1 className="font-headline font-black text-2xl uppercase italic text-black">Get Help</h1>
-        <p className="font-body font-bold text-sm text-on-surface-variant mt-0.5">
-          Tap a category — a nearby volunteer will be alerted immediately.
-        </p>
+        <h1 className="font-headline font-black text-2xl uppercase italic text-white">Get Help</h1>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -119,8 +116,8 @@ export default function HelpScreen() {
       </div>
 
       <div>
-        <label className="block font-headline font-black uppercase text-sm mb-1 italic tracking-tight">
-          Additional Notes <span className="font-body normal-case not-italic font-normal text-on-surface-variant text-xs">(optional)</span>
+        <label className="block font-headline font-black uppercase text-sm mb-1 italic tracking-tight text-white">
+          Additional Notes <span className="font-body normal-case not-italic font-normal text-on-surface-variant text-xs text-white">(optional)</span>
         </label>
         <textarea
           value={notes}
@@ -129,9 +126,6 @@ export default function HelpScreen() {
           rows={3}
           className="w-full bg-white border-4 border-black px-4 py-3 font-body font-bold text-base focus:outline-none focus:border-primary rounded-xl resize-none"
         />
-        <p className="font-body text-xs text-on-surface-variant mt-1">
-          GPS location may be attached if you allow it.
-        </p>
       </div>
     </div>
   )

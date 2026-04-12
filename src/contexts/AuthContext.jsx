@@ -35,10 +35,12 @@ export function AuthProvider({ children }) {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // NOTE: callback must NOT be async / await Supabase calls — it deadlocks the
+    // auth module on refresh. Defer the profile fetch with setTimeout(fn, 0).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (u) await fetchProfile(u.id)
+      if (u) setTimeout(() => fetchProfile(u.id), 0)
       else { setProfile(null); setLoading(false) }
     })
 

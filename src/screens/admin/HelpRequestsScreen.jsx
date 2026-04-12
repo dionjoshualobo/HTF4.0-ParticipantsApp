@@ -55,7 +55,7 @@ export default function HelpRequestsScreen() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-headline font-black text-3xl uppercase italic text-black">Help Requests</h1>
+        <h1 className="font-headline font-black text-3xl uppercase italic text-white">Help Requests</h1>
         {filter === 'pending' && requests.length > 0 && (
           <span className="bg-error-container border-2 border-error text-on-error-container font-headline font-black text-sm uppercase italic px-3 py-1 rounded-xl animate-wiggle">
             {requests.length} urgent
