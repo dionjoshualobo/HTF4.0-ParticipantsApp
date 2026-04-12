@@ -63,7 +63,7 @@ export default function CheckInScreen() {
           ←
         </button>
         <div>
-          <h1 className="font-headline font-black text-2xl uppercase italic leading-none">Check-in QR</h1>
+          <h1 className="font-headline font-black text-2xl uppercase italic leading-none text-black">Check-in QR</h1>
           <p className="font-body font-bold text-xs text-on-surface-variant">Show this to a volunteer at the entrance</p>
         </div>
       </div>

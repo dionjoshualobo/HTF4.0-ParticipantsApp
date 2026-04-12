@@ -44,7 +44,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="font-headline font-black text-3xl uppercase italic mb-6">Overview</h1>
+      <h1 className="font-headline font-black text-3xl uppercase italic mb-6 text-black">Overview</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {CARDS.map(c => {
           const val = stats?.[c.key] ?? 0
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="bg-surface border-4 border-black p-5 drop-block rounded-3xl">
-        <h2 className="font-headline font-black text-lg uppercase italic mb-2">Quick Notes</h2>
+        <h2 className="font-headline font-black text-lg uppercase italic mb-2 text-black">Quick Notes</h2>
         <ul className="font-body font-bold text-sm text-on-surface-variant space-y-1">
           <li>• Use the <span className="text-on-surface">Queue</span> tab to control playback</li>
           <li>• <span className="text-error">Red</span> stat cards require immediate attention</li>

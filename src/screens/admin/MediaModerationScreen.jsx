@@ -40,7 +40,7 @@ export default function MediaModerationScreen() {
 
   return (
     <div>
-      <h1 className="font-headline font-black text-3xl uppercase italic mb-4">Media Moderation</h1>
+      <h1 className="font-headline font-black text-3xl uppercase italic mb-4 text-black">Media Moderation</h1>
 
       <div className="flex gap-3 mb-6">
         {[

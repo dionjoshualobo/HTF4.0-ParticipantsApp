@@ -73,7 +73,7 @@ export default function HelpScreen() {
       <div className="px-4 py-8 flex flex-col items-center justify-center gap-4 min-h-[60vh]">
         <div className="bg-primary-container border-4 border-black p-8 drop-block rounded-3xl text-center w-full">
           <div className="text-6xl mb-4">✓</div>
-          <h2 className="font-headline font-black text-2xl uppercase italic mb-2">Help is Coming!</h2>
+          <h2 className="font-headline font-black text-2xl uppercase italic mb-2 text-on-primary-container">Help is Coming!</h2>
           <p className="font-body font-bold text-on-primary-container opacity-80 text-sm mb-6">
             A volunteer has been notified. Stay where you are.
           </p>
@@ -91,7 +91,7 @@ export default function HelpScreen() {
   return (
     <div className="px-4 pt-6 pb-6 flex flex-col gap-4">
       <div>
-        <h1 className="font-headline font-black text-2xl uppercase italic">Get Help</h1>
+        <h1 className="font-headline font-black text-2xl uppercase italic text-black">Get Help</h1>
         <p className="font-body font-bold text-sm text-on-surface-variant mt-0.5">
           Tap a category — a nearby volunteer will be alerted immediately.
         </p>

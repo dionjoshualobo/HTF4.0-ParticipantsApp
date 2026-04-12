@@ -102,7 +102,7 @@ export default function GalleryScreen() {
     <div className="px-4 pt-6 pb-6 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-headline font-black text-2xl uppercase italic">Gallery</h1>
+        <h1 className="font-headline font-black text-2xl uppercase italic text-black">Gallery</h1>
         <button
           onClick={() => fileRef.current?.click()}
           disabled={uploading}

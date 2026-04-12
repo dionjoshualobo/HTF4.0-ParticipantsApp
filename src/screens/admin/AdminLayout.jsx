@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { SpotifyPlayerProvider } from '../../contexts/SpotifyPlayerContext'
 
 const TABS = [
   { to: '/admin',          label: 'Overview',  icon: '⬡', end: true },
@@ -14,6 +15,7 @@ export default function AdminLayout() {
   const navigate = useNavigate()
 
   return (
+    <SpotifyPlayerProvider>
     <div className="min-h-screen">
       <header className="sticky top-0 bg-on-surface border-b-4 border-black z-50">
         <div className="max-w-4xl mx-auto px-4 flex items-center justify-between h-13 py-3">
@@ -65,5 +67,6 @@ export default function AdminLayout() {
         <Outlet />
       </div>
     </div>
+    </SpotifyPlayerProvider>
   )
 }

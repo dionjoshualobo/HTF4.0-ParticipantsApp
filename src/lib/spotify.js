@@ -20,10 +20,13 @@ async function getToken() {
       'Content-Type': 'application/x-www-form-urlencoded',
       Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
     },
-    body: 'grant_type=client_credentials',
+    body: new URLSearchParams({ grant_type: 'client_credentials' }),
   })
 
-  if (!res.ok) throw new Error(`Spotify token error: ${res.status}`)
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Spotify token error ${res.status}${text ? ': ' + text : ''}`)
+  }
 
   const data = await res.json()
   cachedToken = data.access_token
@@ -34,14 +37,17 @@ async function getToken() {
 export async function searchTracks(query) {
   const token = await getToken()
   const res = await fetch(
-    `${API_URL}/search?q=${encodeURIComponent(query)}&type=track&limit=15`,
+    `${API_URL}/search?q=${encodeURIComponent(query)}&type=track`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
-  if (!res.ok) throw new Error('Spotify search failed')
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(`Spotify search failed (${res.status}): ${body?.error?.message ?? JSON.stringify(body)}`)
+  }
   const data = await res.json()
 
   return (data.tracks?.items ?? [])
-    .filter(t => !t.explicit) // Block explicit content
+    .filter(t => !t.explicit)
     .map(t => ({
       id: t.id,
       name: t.name,

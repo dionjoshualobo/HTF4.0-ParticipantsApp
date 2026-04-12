@@ -16,6 +16,7 @@ import HelpScreen from './screens/participant/HelpScreen'
 
 // Admin
 import AdminLayout from './screens/admin/AdminLayout'
+import SpotifyCallbackScreen from './screens/admin/SpotifyCallbackScreen'
 import AdminDashboard from './screens/admin/AdminDashboard'
 import QueueControlScreen from './screens/admin/QueueControlScreen'
 import MediaModerationScreen from './screens/admin/MediaModerationScreen'
@@ -66,6 +67,9 @@ function AppRoutes() {
         <Route path="/gallery" element={<GalleryScreen />} />
         <Route path="/help"    element={<HelpScreen />} />
       </Route>
+
+      {/* Spotify OAuth callback — standalone, no layout */}
+      <Route path="/admin/spotify-callback" element={<Guard adminOnly><SpotifyCallbackScreen /></Guard>} />
 
       {/* Admin — full-width layout */}
       <Route path="/admin" element={<Guard adminOnly><AdminLayout /></Guard>}>

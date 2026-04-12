@@ -102,7 +102,7 @@ export default function SongQueueScreen() {
 
   return (
     <div className="px-4 pt-6 pb-6 flex flex-col gap-4">
-      <h1 className="font-headline font-black text-2xl uppercase italic">Song Queue</h1>
+      <h1 className="font-headline font-black text-2xl uppercase italic text-black">Song Queue</h1>
 
       {/* Now Playing */}
       <div className={`border-4 border-black p-4 drop-block rounded-3xl flex items-center gap-3 ${nowPlaying ? 'bg-primary-container' : 'bg-surface-container'}`}>
@@ -127,7 +127,7 @@ export default function SongQueueScreen() {
 
       {/* Queue list */}
       <div className="flex items-center justify-between">
-        <h2 className="font-headline font-black text-lg uppercase italic">Up Next ({queue.length})</h2>
+        <h2 className="font-headline font-black text-lg uppercase italic text-black">Up Next ({queue.length})</h2>
       </div>
 
       {loading ? (
@@ -172,7 +172,7 @@ export default function SongQueueScreen() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-headline font-black text-xl uppercase italic">Search Songs</h2>
+              <h2 className="font-headline font-black text-xl uppercase italic text-black">Search Songs</h2>
               <button onClick={closeSearch} className="w-9 h-9 flex items-center justify-center font-headline font-black text-xl hover:bg-surface-container rounded-xl">✕</button>
             </div>
             <input
