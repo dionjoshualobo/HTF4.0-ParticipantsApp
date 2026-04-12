@@ -59,7 +59,7 @@ export default function HomeScreen() {
             onClick={signOut}
             className="bg-surface-variant border-2 border-black px-3 py-1.5 font-headline font-black text-xs uppercase italic drop-block rounded-xl active:scale-95"
           >
-            Out
+            Logout
           </button>
         </div>
       </div>
@@ -68,16 +68,15 @@ export default function HomeScreen() {
       <div className="bg-surface border-4 border-black p-4 drop-block rounded-3xl">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 bg-primary-container border-4 border-black rounded-xl flex items-center justify-center font-headline font-black text-xl text-on-primary-container flex-shrink-0">
-            {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
+            {profile?.team_code?.[0]?.toUpperCase() ?? '?'}
           </div>
           <div className="min-w-0">
             <p className="font-headline font-black text-lg uppercase italic leading-tight truncate">
-              {profile?.full_name ?? 'Participant'}
+              {profile?.team_name ?? 'Team'}
             </p>
             <p className="font-body font-bold text-sm text-on-surface-variant truncate">
-              {profile?.team_name ?? 'No team'}
               {profile?.team_code && (
-                <span className="font-mono text-primary"> · {profile.team_code}</span>
+                <span className="font-mono text-primary">{profile.team_code}</span>
               )}
             </p>
           </div>

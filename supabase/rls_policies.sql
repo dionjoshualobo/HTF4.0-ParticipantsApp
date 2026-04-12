@@ -24,6 +24,10 @@ create policy "profiles: admin read all"
   on public.profiles for select
   using (public.my_role() = 'admin');
 
+create policy "profiles: volunteer read all"
+  on public.profiles for select
+  using (public.my_role() = 'volunteer');
+
 create policy "profiles: own update"
   on public.profiles for update
   using (auth.uid() = id)
@@ -146,10 +150,6 @@ create policy "help: volunteer/admin update"
 -- These apply to the 'event-media' bucket
 -- =============================================================
 
--- Allow authenticated users to upload
--- insert into storage.policies ... (easier via Dashboard)
-
--- SQL equivalent (run in storage schema context):
 /*
 create policy "storage: authenticated upload"
   on storage.objects for insert

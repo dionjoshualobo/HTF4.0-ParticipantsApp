@@ -5,7 +5,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function AuthScreen() {
   const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
+  const [teamCode, setTeamCode] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,10 +15,10 @@ export default function AuthScreen() {
     setLoading(true)
     setError('')
 
-    const { error: err } = await signIn(email.trim(), password.trim())
+    const { error: err } = await signIn(teamCode.trim(), password.trim())
 
     if (err) {
-      setError('Invalid email or team code. Please check and try again.')
+      setError('Invalid team code or password. Please check and try again.')
       setLoading(false)
     }
     // On success, AuthContext updates → App redirects automatically
@@ -34,41 +34,41 @@ export default function AuthScreen() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <h1 className="font-headline font-black text-3xl uppercase italic tracking-tight text-center mb-6">
-            Participant Login
+            Team Login
           </h1>
 
-          {/* Email */}
-          <div>
-            <label className="block font-headline font-black uppercase text-sm mb-1 italic tracking-tight">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              autoComplete="email"
-              className="w-full bg-white border-4 border-black px-4 py-3 font-body font-bold text-base focus:outline-none focus:border-primary transition-colors rounded-xl"
-            />
-          </div>
-
-          {/* Password = Team Code */}
+          {/* Team Code */}
           <div>
             <label className="block font-headline font-black uppercase text-sm mb-1 italic tracking-tight">
               Team Code
             </label>
             <input
+              type="text"
+              value={teamCode}
+              onChange={e => setTeamCode(e.target.value.toUpperCase())}
+              placeholder="e.g. T02"
+              required
+              autoComplete="username"
+              className="w-full bg-white border-4 border-black px-4 py-3 font-body font-bold text-base focus:outline-none focus:border-primary transition-colors rounded-xl uppercase tracking-wider"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block font-headline font-black uppercase text-sm mb-1 italic tracking-tight">
+              Password
+            </label>
+            <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="e.g. A00"
+              placeholder="Enter your team password"
               required
               autoComplete="current-password"
               className="w-full bg-white border-4 border-black px-4 py-3 font-body font-bold text-base focus:outline-none focus:border-primary transition-colors rounded-xl"
             />
             <p className="font-body text-xs text-on-surface-variant mt-1">
-              Your password is your team code provided by the organizer.
+              Use the password provided by the organizer.
             </p>
           </div>
 

@@ -40,7 +40,7 @@ export default function SongQueueScreen() {
   async function loadQueue() {
     const { data } = await supabase
       .from('song_queue')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(team_name)')
       .eq('is_played', false)
       .order('position', { ascending: true })
     if (data) {

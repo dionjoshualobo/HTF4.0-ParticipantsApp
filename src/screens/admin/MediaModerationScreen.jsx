@@ -13,7 +13,7 @@ export default function MediaModerationScreen() {
     setLoading(true)
     let q = supabase
       .from('media_items')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(team_name)')
       .order('uploaded_at', { ascending: false })
     if (tab === 'flagged') q = q.eq('is_flagged', true)
     else q = q.limit(60)
@@ -45,14 +45,13 @@ export default function MediaModerationScreen() {
       <div className="flex gap-3 mb-6">
         {[
           { key: 'flagged', label: tab === 'flagged' ? `Flagged (${items.length})` : 'Flagged' },
-          { key: 'all',     label: 'All Media' },
+          { key: 'all', label: 'All Media' },
         ].map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 border-4 border-black font-headline font-black text-sm uppercase italic rounded-2xl transition-all ${
-              tab === t.key ? 'bg-primary-container text-on-primary-container drop-block' : 'bg-surface-variant hover:bg-surface-container'
-            }`}
+            className={`px-4 py-2 border-4 border-black font-headline font-black text-sm uppercase italic rounded-2xl transition-all ${tab === t.key ? 'bg-primary-container text-on-primary-container drop-block' : 'bg-surface-variant hover:bg-surface-container'
+              }`}
           >
             {t.label}
           </button>
@@ -85,7 +84,7 @@ export default function MediaModerationScreen() {
               </div>
               <div className="p-3 space-y-2">
                 <p className="font-body font-bold text-xs text-on-surface-variant truncate">
-                  {item.profiles?.full_name ?? 'Unknown'}
+                  {item.profiles?.team_name ?? 'Unknown'}
                 </p>
                 <p className="font-body text-[10px] text-outline">
                   {new Date(item.uploaded_at).toLocaleDateString()}

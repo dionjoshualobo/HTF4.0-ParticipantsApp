@@ -29,7 +29,7 @@ export default function GalleryScreen() {
   async function loadMedia() {
     const { data } = await supabase
       .from('media_items')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(team_name)')
       .eq('is_approved', true)
       .order('uploaded_at', { ascending: false })
     if (data) setItems(data)
@@ -164,7 +164,7 @@ export default function GalleryScreen() {
             )}
             <div className="p-4 flex items-center justify-between border-t-4 border-black">
               <div>
-                <p className="font-body font-bold text-sm">{selected.profiles?.full_name ?? 'Anonymous'}</p>
+                <p className="font-body font-bold text-sm">{selected.profiles?.team_name ?? 'Anonymous'}</p>
                 <p className="font-body text-xs text-on-surface-variant">
                   {new Date(selected.uploaded_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>

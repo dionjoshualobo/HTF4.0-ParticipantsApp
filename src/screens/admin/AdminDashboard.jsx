@@ -34,10 +34,10 @@ export default function AdminDashboard() {
   }, [loadStats])
 
   const CARDS = [
-    { key: 'checkins',    label: 'Checked In',    icon: '✓', bg: 'bg-primary-container',  text: 'text-on-primary-container',  alert: false },
-    { key: 'queueLen',    label: 'Songs in Queue', icon: '♫', bg: 'bg-tertiary-container', text: 'text-on-tertiary-container', alert: false },
-    { key: 'pendingHelp', label: 'Pending Help',   icon: '!', bg: null, text: null, alert: true  },
-    { key: 'flagged',     label: 'Flagged Media',  icon: '⚑', bg: null, text: null, alert: true  },
+    { key: 'checkins', label: 'Checked In', icon: '✓', bg: 'bg-primary-container', text: 'text-on-primary-container', alert: false },
+    { key: 'queueLen', label: 'Songs in Queue', icon: '♫', bg: 'bg-tertiary-container', text: 'text-on-tertiary-container', alert: false },
+    { key: 'pendingHelp', label: 'Pending Help', icon: '!', bg: null, text: null, alert: true },
+    { key: 'flagged', label: 'Flagged Media', icon: '⚑', bg: null, text: null, alert: true },
   ]
 
   if (loading) return <div className="py-12"><LoadingSpinner /></div>
@@ -49,8 +49,8 @@ export default function AdminDashboard() {
         {CARDS.map(c => {
           const val = stats?.[c.key] ?? 0
           const alert = c.alert && val > 0
-          const bg   = alert ? 'bg-error-container'        : (c.bg   ?? 'bg-surface-variant')
-          const text = alert ? 'text-on-error-container'   : (c.text ?? 'text-on-surface')
+          const bg = alert ? 'bg-error-container' : (c.bg ?? 'bg-surface-variant')
+          const text = alert ? 'text-on-error-container' : (c.text ?? 'text-on-surface')
           return (
             <div key={c.key} className={`${bg} ${text} border-4 border-black p-5 drop-block rounded-3xl`}>
               <div className="text-3xl mb-2">{c.icon}</div>
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
           <li>• Use the <span className="text-on-surface">Queue</span> tab to control playback</li>
           <li>• <span className="text-error">Red</span> stat cards require immediate attention</li>
           <li>• All counts update in real-time via Supabase Realtime</li>
-          <li>• Set a user&apos;s <code className="bg-surface-container px-1 rounded">role = admin</code> in the profiles table to grant access</li>
+          <li>• Set a team&apos;s <code className="bg-surface-container px-1 rounded">role = admin</code> in the profiles table to grant access</li>
         </ul>
       </div>
     </div>

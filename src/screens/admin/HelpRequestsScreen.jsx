@@ -4,14 +4,14 @@ import { useToast } from '../../contexts/ToastContext'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const STATUS_STYLE = {
-  pending:     'bg-error-container text-on-error-container border-error',
+  pending: 'bg-error-container text-on-error-container border-error',
   in_progress: 'bg-primary-container text-on-primary-container border-black',
-  resolved:    'bg-surface-variant text-on-surface border-black',
+  resolved: 'bg-surface-variant text-on-surface border-black',
 }
 const TYPE_BG = {
-  medical:   'bg-error-container/60',
+  medical: 'bg-error-container/60',
   technical: 'bg-tertiary-container/60',
-  general:   'bg-surface-container',
+  general: 'bg-surface-container',
 }
 
 export default function HelpRequestsScreen() {
@@ -23,7 +23,7 @@ export default function HelpRequestsScreen() {
   const loadRequests = useCallback(async () => {
     let q = supabase
       .from('help_requests')
-      .select('*, profiles(full_name, team_code)')
+      .select('*, profiles(team_name, team_code)')
       .order('created_at', { ascending: false })
     if (filter !== 'all') q = q.eq('status', filter)
     const { data } = await q
@@ -68,9 +68,8 @@ export default function HelpRequestsScreen() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`flex-shrink-0 px-4 py-2 border-4 border-black font-headline font-black text-xs uppercase italic rounded-2xl transition-all ${
-              filter === f ? 'bg-primary-container text-on-primary-container drop-block' : 'bg-surface-variant hover:bg-surface-container'
-            }`}
+            className={`flex-shrink-0 px-4 py-2 border-4 border-black font-headline font-black text-xs uppercase italic rounded-2xl transition-all ${filter === f ? 'bg-primary-container text-on-primary-container drop-block' : 'bg-surface-variant hover:bg-surface-container'
+              }`}
           >
             {f.replace('_', ' ')}
           </button>
@@ -93,7 +92,7 @@ export default function HelpRequestsScreen() {
                   </span>
                 </div>
                 <p className="font-body font-bold text-sm">
-                  {req.profiles?.full_name ?? 'Unknown'}
+                  {req.profiles?.team_name ?? 'Unknown'}
                   {req.profiles?.team_code && (
                     <span className="font-mono text-primary"> · {req.profiles.team_code}</span>
                   )}

@@ -13,6 +13,7 @@ import CheckInScreen from './screens/participant/CheckInScreen'
 import SongQueueScreen from './screens/participant/SongQueueScreen'
 import GalleryScreen from './screens/participant/GalleryScreen'
 import HelpScreen from './screens/participant/HelpScreen'
+import VolunteerWelcomeScreen from './screens/volunteer/VolunteerWelcomeScreen'
 
 // Admin
 import AdminLayout from './screens/admin/AdminLayout'
@@ -25,8 +26,8 @@ import CheckinMonitorScreen from './screens/admin/CheckinMonitorScreen'
 
 // ─── Route guards ────────────────────────────────────────────────────────────
 
-function Guard({ children, adminOnly = false }) {
-  const { user, loading, isAdmin } = useAuth()
+function Guard({ children, adminOnly = false, volunteerOnly = false, participantOnly = false }) {
+  const { user, loading, isAdmin, profile } = useAuth()
 
   if (loading) {
     return (
@@ -38,13 +39,26 @@ function Guard({ children, adminOnly = false }) {
 
   if (!user) return <Navigate to="/auth" replace />
   if (adminOnly && !isAdmin) return <Navigate to="/home" replace />
+  if (participantOnly && profile?.role === 'volunteer') return <Navigate to="/volunteer" replace />
+  if (volunteerOnly && profile?.role !== 'volunteer') {
+    if (profile?.role === 'admin') return <Navigate to="/admin" replace />
+    return <Navigate to="/home" replace />
+  }
   return children
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 
 function AppRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading, profile } = useAuth()
+
+  const defaultPath = user
+    ? profile?.role === 'admin'
+      ? '/admin'
+      : profile?.role === 'volunteer'
+        ? '/volunteer'
+        : '/home'
+    : '/auth'
 
   if (loading) {
     return (
@@ -57,16 +71,19 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/auth" element={user ? <Navigate to="/home" replace /> : <AuthScreen />} />
+      <Route path="/auth" element={user ? <Navigate to={defaultPath} replace /> : <AuthScreen />} />
 
       {/* Participant — all share the phone-frame layout via nested routing */}
-      <Route element={<Guard><ParticipantLayout /></Guard>}>
+      <Route element={<Guard participantOnly><ParticipantLayout /></Guard>}>
         <Route path="/home"    element={<HomeScreen />} />
         <Route path="/checkin" element={<CheckInScreen />} />
         <Route path="/queue"   element={<SongQueueScreen />} />
         <Route path="/gallery" element={<GalleryScreen />} />
         <Route path="/help"    element={<HelpScreen />} />
       </Route>
+
+      {/* Volunteer landing */}
+      <Route path="/volunteer" element={<Guard volunteerOnly><VolunteerWelcomeScreen /></Guard>} />
 
       {/* Spotify OAuth callback — standalone, no layout */}
       <Route path="/admin/spotify-callback" element={<Guard adminOnly><SpotifyCallbackScreen /></Guard>} />
@@ -81,7 +98,7 @@ function AppRoutes() {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={user ? '/home' : '/auth'} replace />} />
+      <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
   )
 }
