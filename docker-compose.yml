@@ -11,10 +11,12 @@ services:
       args:
         # Vite bakes these into the bundle at BUILD time. Supply values via
         # a `.env` file next to this compose file (see .env.example).
-        VITE_SUPABASE_URL:          ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY:     ${VITE_SUPABASE_ANON_KEY}
-        VITE_SPOTIFY_CLIENT_ID:     ${VITE_SPOTIFY_CLIENT_ID}
-        VITE_SPOTIFY_CLIENT_SECRET: ${VITE_SPOTIFY_CLIENT_SECRET}
+        VITE_SUPABASE_URL:             ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY:        ${VITE_SUPABASE_ANON_KEY}
+        VITE_SPOTIFY_CLIENT_ID:        ${VITE_SPOTIFY_CLIENT_ID}
+        VITE_SPOTIFY_CLIENT_SECRET:    ${VITE_SPOTIFY_CLIENT_SECRET}
+        VITE_CLOUDINARY_CLOUD_NAME:    ${VITE_CLOUDINARY_CLOUD_NAME}
+        VITE_CLOUDINARY_UPLOAD_PRESET: ${VITE_CLOUDINARY_UPLOAD_PRESET}
     image: htf4-volunteer:latest
     container_name: htf4-volunteer
     restart: unless-stopped

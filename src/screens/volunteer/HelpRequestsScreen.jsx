@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useToast } from '../../contexts/ToastContext'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -16,36 +16,69 @@ const TYPE_BG = {
 
 export default function HelpRequestsScreen() {
   const toast = useToast()
-  const [requests, setRequests] = useState([])
+  const [allRequests, setAllRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending')
+  const [pendingIds, setPendingIds] = useState(() => new Set())
+
+  // Keep a ref so the realtime callback always sees the latest loader
+  // without having to re-subscribe on every filter change.
+  const loadRef = useRef(() => {})
 
   const loadRequests = useCallback(async () => {
-    let q = supabase
+    const { data, error } = await supabase
       .from('help_requests')
       .select('*, profiles(full_name, team_code)')
       .order('created_at', { ascending: false })
-    if (filter !== 'all') q = q.eq('status', filter)
-    const { data } = await q
-    setRequests(data ?? [])
+    if (error) {
+      toast.error('Failed to load help requests')
+    } else {
+      setAllRequests(data ?? [])
+    }
     setLoading(false)
-  }, [filter])
+  }, [toast])
 
+  useEffect(() => { loadRef.current = loadRequests }, [loadRequests])
+
+  // Single, stable realtime subscription — doesn't tear down when filter changes
   useEffect(() => {
     loadRequests()
     const ch = supabase
-      .channel('admin_help_rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'help_requests' }, loadRequests)
+      .channel('help_requests_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'help_requests' }, () => loadRef.current())
       .subscribe()
     return () => supabase.removeChannel(ch)
-  }, [loadRequests])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Derived filtered view — no refetch needed when the tab changes
+  const requests = useMemo(() => (
+    filter === 'all' ? allRequests : allRequests.filter(r => r.status === filter)
+  ), [allRequests, filter])
 
   async function updateStatus(id, status) {
     const updates = { status }
     if (status === 'resolved') updates.resolved_at = new Date().toISOString()
+
+    // Optimistic: reflect the change immediately, so UX doesn't depend on realtime
+    const snapshot = allRequests
+    setAllRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r))
+    setPendingIds(prev => new Set(prev).add(id))
+
     const { error } = await supabase.from('help_requests').update(updates).eq('id', id)
-    if (error) toast.error('Update failed')
-    else toast.success(`Marked as ${status.replace('_', ' ')}`)
+
+    setPendingIds(prev => {
+      const next = new Set(prev); next.delete(id); return next
+    })
+
+    if (error) {
+      setAllRequests(snapshot)               // rollback
+      toast.error('Update failed')
+    } else {
+      toast.success(`Marked as ${status.replace('_', ' ')}`)
+      // Trigger a fresh fetch to confirm server truth (cheap, single query)
+      loadRequests()
+    }
   }
 
   const FILTERS = ['pending', 'in_progress', 'resolved', 'all']
@@ -124,16 +157,18 @@ export default function HelpRequestsScreen() {
                   {req.status === 'pending' && (
                     <button
                       onClick={() => updateStatus(req.id, 'in_progress')}
-                      className="flex-1 bg-primary-container text-on-primary-container border-2 border-black py-2 font-headline font-black text-xs uppercase italic drop-block rounded-xl active:scale-95"
+                      disabled={pendingIds.has(req.id)}
+                      className="flex-1 bg-primary-container text-on-primary-container border-2 border-black py-2 font-headline font-black text-xs uppercase italic drop-block rounded-xl active:scale-95 disabled:opacity-50"
                     >
-                      → In Progress
+                      {pendingIds.has(req.id) ? '…' : '→ In Progress'}
                     </button>
                   )}
                   <button
                     onClick={() => updateStatus(req.id, 'resolved')}
-                    className="flex-1 bg-surface border-2 border-black py-2 font-headline font-black text-xs uppercase italic drop-block rounded-xl active:scale-95"
+                    disabled={pendingIds.has(req.id)}
+                    className="flex-1 bg-surface border-2 border-black py-2 font-headline font-black text-xs uppercase italic drop-block rounded-xl active:scale-95 disabled:opacity-50"
                   >
-                    ✓ Resolved
+                    {pendingIds.has(req.id) ? '…' : '✓ Resolved'}
                   </button>
                 </div>
               )}
