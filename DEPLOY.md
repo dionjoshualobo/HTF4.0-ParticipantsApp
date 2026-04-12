@@ -1,30 +1,17 @@
-# Deploying to a VPS
+# Deploying to a VPS (behind host nginx)
 
-The stack is two containers:
-- **web** — static React/Vite bundle served by nginx (internal only)
-- **caddy** — terminates HTTPS with auto-provisioned Let's Encrypt certs, reverse proxies to `web`
+The app ships as a single container running nginx that serves the static
+React/Vite bundle. The container binds to **`127.0.0.1:8080`** only — your
+host's nginx terminates TLS and reverse-proxies to it.
 
-All application state lives in Supabase, so the containers are stateless apart from Caddy's cert volume.
+All application state lives in Supabase, so the container is stateless and
+can be rebuilt freely.
 
-## 1. Prerequisites
+## 1. Configure `.env`
 
-- **A domain name** pointing at your VPS's public IP (A/AAAA record). Let's Encrypt cannot issue certificates for raw IPs. Free option: `duckdns.org`.
-- **Ports 80 and 443** open on the VPS firewall — both are required (80 for the HTTP-01 ACME challenge, 443 for HTTPS).
-- Docker + Compose:
-  ```bash
-  curl -fsSL https://get.docker.com | sh
-  sudo usermod -aG docker $USER   # log out/in after this
-  ```
-
-## 2. Configure `.env`
-
-Copy `.env.example` → `.env` next to `docker-compose.yml` and fill in:
+Copy `.env.example` → `.env` next to `docker-compose.yml`:
 
 ```env
-# Domain + Let's Encrypt contact
-DOMAIN=htf4.yourdomain.com
-EMAIL=you@yourdomain.com
-
 # Supabase
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
@@ -34,33 +21,61 @@ VITE_SPOTIFY_CLIENT_ID=...
 VITE_SPOTIFY_CLIENT_SECRET=...
 ```
 
-> ⚠ **Vite vars are build-time.** Changing any `VITE_*` value requires a rebuild: `docker compose build --no-cache && docker compose up -d`.
+> ⚠ **Vite vars are build-time.** Any change requires a rebuild: `docker compose build --no-cache && docker compose up -d`.
 
-## 3. Build and run
+## 2. Build and run the container
 
 ```bash
 git clone <your-repo> && cd "Participants APP"
 docker compose up -d --build
-docker compose logs -f caddy    # watch Caddy acquire the cert
+curl -I http://127.0.0.1:8080   # should return 200
 ```
 
-On first run, Caddy solves the HTTP-01 challenge and installs a certificate. You should see a line like `certificate obtained successfully` in the logs within 10–30 seconds.
+## 3. Wire up host nginx
 
-The app is now live at **`https://<DOMAIN>`**. Plain HTTP requests to port 80 are automatically redirected to HTTPS by Caddy.
+A sample site config lives at `deploy/nginx-site.conf.example`. Install it:
 
-## 4. Update Spotify + Supabase for the new origin
+```bash
+sudo cp deploy/nginx-site.conf.example \
+        /etc/nginx/sites-available/htf4-volunteer.conf
+
+# Edit the file and replace `htf4.yourdomain.com` with your real domain
+sudo nano /etc/nginx/sites-available/htf4-volunteer.conf
+
+sudo ln -s /etc/nginx/sites-available/htf4-volunteer.conf \
+           /etc/nginx/sites-enabled/
+
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## 4. Issue a TLS certificate
+
+If you already use certbot:
+
+```bash
+sudo certbot --nginx -d htf4.yourdomain.com
+```
+
+Certbot reads the server block you just added, issues a Let's Encrypt cert,
+and injects the `ssl_certificate` / `ssl_certificate_key` lines automatically.
+Reload nginx when it prompts you.
+
+> Web NFC **requires HTTPS with a publicly-trusted certificate** (self-signed
+> won't work). Let's Encrypt is free and what certbot uses by default.
+
+## 5. Update Spotify + Supabase for the new origin
 
 1. **Spotify Dashboard → your app → Redirect URIs** — add:
-   `https://<DOMAIN>/volunteer/spotify-callback`
+   `https://<your-domain>/volunteer/spotify-callback`
 2. **Supabase Dashboard → Authentication → URL Configuration**:
-   - Site URL: `https://<DOMAIN>`
-   - Redirect URLs: `https://<DOMAIN>/**`
+   - Site URL: `https://<your-domain>`
+   - Redirect URLs: `https://<your-domain>/**`
 
-## 5. Run the meal/NFC migration once
+## 6. Run the meal/NFC migration once
 
-In Supabase Dashboard → SQL Editor, paste and run the contents of `supabase/meals_migration.sql`.
+In Supabase Dashboard → SQL Editor, paste and run `supabase/meals_migration.sql`.
 
-## 6. Updating the app
+## 7. Updating the app
 
 ```bash
 git pull
@@ -68,25 +83,37 @@ docker compose up -d --build
 docker image prune -f
 ```
 
-Caddy keeps running throughout — only the `web` container restarts.
+Host nginx keeps running; only the container restarts.
+
+## Architecture notes
+
+```
+Internet ─► :443 host-nginx (TLS) ─► 127.0.0.1:8080 container-nginx ─► static bundle
+```
+
+- Two nginx layers is fine — the inner one handles SPA fallback + asset cache headers + gzip, the outer one handles TLS + HSTS.
+- Only port 443 (and 80 for cert renewal) needs to be exposed publicly.
+- The container's port binding is `127.0.0.1:8080:80` — even if the host firewall is misconfigured, the container itself refuses external connections.
 
 ## Troubleshooting
 
-**Cert not issuing.** Check `docker compose logs caddy`:
-- `no such host` → DNS isn't pointing at the VPS yet. Wait for propagation.
-- `connection refused` / `timeout` → port 80 is blocked. Open it in the VPS firewall (`ufw allow 80,443/tcp`) and any cloud-provider security group.
-- Testing DNS / cert config without burning rate limits: uncomment the `acme_ca` staging line in `Caddyfile`, then re-comment once it works and run `docker compose restart caddy`.
+**502 Bad Gateway from host nginx.**
+- Container isn't running: `docker compose ps`
+- Wrong port: `curl -I http://127.0.0.1:8080` from the VPS
+- SELinux blocking the loopback connection (RHEL-family only): `sudo setsebool -P httpd_can_network_connect on`
 
-**NFC still not working after HTTPS.** Hard-refresh the page on your phone (clear cache), then open the Meals tab. The diagnostic card will print a specific reason code if NFC is still blocked.
+**Certbot fails with "connection refused".** Port 80 must be open publicly for HTTP-01 challenges. Check firewall/security group.
+
+**NFC still not working after HTTPS.** Hard-refresh on the phone to clear cache. The Meals tab prints a diagnostic reason code on failure.
 
 ## Cheat sheet
 
 ```bash
 docker compose logs -f web          # tail app logs
-docker compose logs -f caddy        # tail proxy / TLS logs
-docker compose restart web          # restart app without rebuild
-docker compose down                 # stop everything
+docker compose restart web          # restart without rebuild
+docker compose down                 # stop + remove container
 docker compose build --no-cache     # force clean rebuild
-docker exec -it htf4-volunteer-web sh    # shell into app container
-docker exec -it htf4-volunteer-caddy sh  # shell into caddy
+docker exec -it htf4-volunteer sh   # shell into container
+sudo tail -f /var/log/nginx/error.log    # host nginx errors
+sudo nginx -t && sudo systemctl reload nginx
 ```

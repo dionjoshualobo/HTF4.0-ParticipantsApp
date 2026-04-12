@@ -1,0 +1,75 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Example nginx site config for the HTF4 Volunteer App
+#
+# Place this at:  /etc/nginx/sites-available/htf4-volunteer.conf
+# Enable with:    sudo ln -s /etc/nginx/sites-available/htf4-volunteer.conf \
+#                            /etc/nginx/sites-enabled/
+# Reload nginx:   sudo nginx -t && sudo systemctl reload nginx
+#
+# TLS certs are assumed to be managed by certbot. If you haven't issued one:
+#   sudo certbot --nginx -d htf4.yourdomain.com
+# certbot will inject the ssl_certificate lines automatically. Replace the
+# two REPLACE_ME lines below with the paths certbot shows, or run certbot
+# AFTER this file is installed and it will edit it for you.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Redirect HTTP → HTTPS (certbot inserts this block itself; include only if
+# you are managing certs manually).
+server {
+    listen      80;
+    listen [::]:80;
+    server_name htf4.yourdomain.com;
+
+    # ACME HTTP-01 challenges (certbot webroot). Safe to keep.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen      443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name htf4.yourdomain.com;
+
+    # ─── TLS ─────────────────────────────────────────────────────────────────
+    ssl_certificate     /etc/letsencrypt/live/htf4.yourdomain.com/fullchain.pem; # REPLACE_ME
+    ssl_certificate_key /etc/letsencrypt/live/htf4.yourdomain.com/privkey.pem;   # REPLACE_ME
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # HSTS — enables preload eligibility. Remove `preload` if you're not sure.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options    "nosniff"                             always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin"     always;
+
+    # ─── Reverse proxy → Docker container on 127.0.0.1:8080 ──────────────────
+    # Container already runs its own nginx with SPA fallback, gzip, and asset
+    # caching (see docker/nginx.conf), so this block just forwards.
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-Host  $host;
+
+        # Supabase Realtime uses WebSockets — not strictly needed here since
+        # the WS goes straight to supabase.co, but harmless to keep.
+        proxy_set_header   Upgrade    $http_upgrade;
+        proxy_set_header   Connection "upgrade";
+
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+
+    # Upload allowance (uploads go straight to Supabase, but safe default).
+    client_max_body_size 50M;
+}
