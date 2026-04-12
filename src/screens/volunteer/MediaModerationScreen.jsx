@@ -25,8 +25,11 @@ export default function MediaModerationScreen() {
   useEffect(() => { loadMedia() }, [loadMedia])
 
   async function deleteItem(item) {
-    await supabase.storage.from('event-media').remove([item.storage_path])
-    await supabase.from('media_items').delete().eq('id', item.id)
+    // Media lives in Cloudinary (unsigned uploads); client-side deletion
+    // there requires a signed request, so we only drop the DB row and let
+    // the asset orphan — clean up via Cloudinary's Media Library if needed.
+    const { error } = await supabase.from('media_items').delete().eq('id', item.id)
+    if (error) { toast.error('Delete failed'); return }
     toast.success('Deleted')
     setItems(prev => prev.filter(i => i.id !== item.id))
   }

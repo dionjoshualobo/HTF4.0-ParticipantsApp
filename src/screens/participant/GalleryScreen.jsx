@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { useToast } from '../../contexts/ToastContext'
+import { uploadToCloudinary, isCloudinaryConfigured } from '../../lib/cloudinary'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
-const UPLOAD_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-to-drive`
 
 export default function GalleryScreen() {
   const { user } = useAuth()
@@ -41,44 +41,27 @@ export default function GalleryScreen() {
     if (!file || !user) return
     e.target.value = ''
 
+    if (!isCloudinaryConfigured()) {
+      toast.error('Uploads not configured — ask an organizer')
+      return
+    }
     if (file.size > MAX_FILE_SIZE) { toast.error('File too large (max 50 MB)'); return }
     const isImg = file.type.startsWith('image/')
     const isVid = file.type.startsWith('video/')
     if (!isImg && !isVid) { toast.error('Images and videos only'); return }
 
-    setUploading(true); setProgress(10)
+    setUploading(true); setProgress(0)
 
     try {
-      // Get the anon key to authorize the edge function call
-      const { data: { session } } = await supabase.auth.getSession()
-      const authHeader = session?.access_token
-        ? `Bearer ${session.access_token}`
-        : `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-
-      const form = new FormData()
-      form.append('file', file)
-
-      setProgress(20)
-      const res = await fetch(UPLOAD_FN_URL, {
-        method: 'POST',
-        headers: { Authorization: authHeader },
-        body: form,
+      const { publicUrl, publicId, mediaType } = await uploadToCloudinary(file, {
+        onProgress: (p) => setProgress(Math.max(1, Math.min(95, p))),
       })
 
-      setProgress(80)
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error ?? 'Upload failed')
-      }
-
-      const { publicUrl, mediaType } = await res.json()
-      setProgress(90)
-
       const { error: dbErr } = await supabase.from('media_items').insert({
-        uploaded_by: user.id,
-        storage_path: null,
-        public_url: publicUrl,
-        media_type: mediaType,
+        uploaded_by:  user.id,
+        storage_path: publicId,  // reused column — holds the Cloudinary public_id for later deletion
+        public_url:   publicUrl,
+        media_type:   mediaType,
       })
       if (dbErr) throw dbErr
 

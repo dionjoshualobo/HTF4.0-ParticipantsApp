@@ -13,19 +13,18 @@ import CheckInScreen from './screens/participant/CheckInScreen'
 import SongQueueScreen from './screens/participant/SongQueueScreen'
 import GalleryScreen from './screens/participant/GalleryScreen'
 import HelpScreen from './screens/participant/HelpScreen'
-import VolunteerWelcomeScreen from './screens/volunteer/VolunteerWelcomeScreen'
 
-// Admin
-import AdminLayout from './screens/admin/AdminLayout'
-import SpotifyCallbackScreen from './screens/admin/SpotifyCallbackScreen'
-import AdminDashboard from './screens/admin/AdminDashboard'
-import QueueControlScreen from './screens/admin/QueueControlScreen'
-import MediaModerationScreen from './screens/admin/MediaModerationScreen'
-import HelpRequestsScreen from './screens/admin/HelpRequestsScreen'
-import CheckinMonitorScreen from './screens/admin/CheckinMonitorScreen'
+// Volunteer
+import VolunteerLayout from './screens/volunteer/VolunteerLayout'
+import SpotifyCallbackScreen from './screens/volunteer/SpotifyCallbackScreen'
+import VolunteerDashboard from './screens/volunteer/VolunteerDashboard'
+import MealScannerScreen from './screens/volunteer/MealScannerScreen'
+import QueueControlScreen from './screens/volunteer/QueueControlScreen'
+import MediaModerationScreen from './screens/volunteer/MediaModerationScreen'
+import HelpRequestsScreen from './screens/volunteer/HelpRequestsScreen'
+import CheckinMonitorScreen from './screens/volunteer/CheckinMonitorScreen'
 
 // ─── Route guards ────────────────────────────────────────────────────────────
-
 function MissingProfileScreen() {
   const { signOut } = useAuth()
 
@@ -47,8 +46,8 @@ function MissingProfileScreen() {
   )
 }
 
-function Guard({ children, adminOnly = false, volunteerOnly = false, participantOnly = false }) {
-  const { user, loading, isAdmin, profile } = useAuth()
+function Guard({ children, volunteerOnly = false, participantOnly = false }) {
+  const { user, loading, profile, isVolunteer } = useAuth()
 
   if (loading) {
     return (
@@ -60,12 +59,8 @@ function Guard({ children, adminOnly = false, volunteerOnly = false, participant
 
   if (!user) return <Navigate to="/auth" replace />
   if (!profile) return <MissingProfileScreen />
-  if (adminOnly && !isAdmin) return <Navigate to="/home" replace />
-  if (participantOnly && profile?.role === 'volunteer') return <Navigate to="/volunteer" replace />
-  if (volunteerOnly && profile?.role !== 'volunteer') {
-    if (profile?.role === 'admin') return <Navigate to="/admin" replace />
-    return <Navigate to="/home" replace />
-  }
+  if (participantOnly && isVolunteer) return <Navigate to="/volunteer" replace />
+  if (volunteerOnly && !isVolunteer) return <Navigate to="/home" replace />
   return children
 }
 
@@ -79,11 +74,7 @@ function AppRoutes() {
   }
 
   const defaultPath = user
-    ? profile?.role === 'admin'
-      ? '/admin'
-      : profile?.role === 'volunteer'
-        ? '/volunteer'
-        : '/home'
+    ? (profile?.role === 'volunteer' || profile?.role === 'admin' ? '/volunteer' : '/home')
     : '/auth'
 
   if (loading) {
@@ -108,20 +99,21 @@ function AppRoutes() {
         <Route path="/help"    element={<HelpScreen />} />
       </Route>
 
-      {/* Volunteer landing */}
-      <Route path="/volunteer" element={<Guard volunteerOnly><VolunteerWelcomeScreen /></Guard>} />
-
       {/* Spotify OAuth callback — standalone, no layout */}
-      <Route path="/admin/spotify-callback" element={<Guard adminOnly><SpotifyCallbackScreen /></Guard>} />
+      <Route path="/volunteer/spotify-callback" element={<Guard volunteerOnly><SpotifyCallbackScreen /></Guard>} />
 
-      {/* Admin — full-width layout */}
-      <Route path="/admin" element={<Guard adminOnly><AdminLayout /></Guard>}>
-        <Route index         element={<AdminDashboard />} />
-        <Route path="queue"    element={<QueueControlScreen />} />
-        <Route path="media"    element={<MediaModerationScreen />} />
-        <Route path="help"     element={<HelpRequestsScreen />} />
-        <Route path="checkins" element={<CheckinMonitorScreen />} />
+      {/* Volunteer — full-width layout (admins also have access via isVolunteer) */}
+      <Route path="/volunteer" element={<Guard volunteerOnly><VolunteerLayout /></Guard>}>
+        <Route index            element={<VolunteerDashboard />} />
+        <Route path="meals"     element={<MealScannerScreen />} />
+        <Route path="queue"     element={<QueueControlScreen />} />
+        <Route path="media"     element={<MediaModerationScreen />} />
+        <Route path="help"      element={<HelpRequestsScreen />} />
+        <Route path="checkins"  element={<CheckinMonitorScreen />} />
       </Route>
+
+      {/* Back-compat: redirect old /admin/* URLs to /volunteer/* */}
+      <Route path="/admin/*" element={<Navigate to="/volunteer" replace />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to={defaultPath} replace />} />

@@ -1,0 +1,32 @@
+services:
+  # ──────────────────────────────────────────────────────────────────────────
+  # web — React/Vite bundle served by nginx inside the container.
+  # Bound to localhost on the host (127.0.0.1:8080) so only the host's nginx
+  # reverse-proxy can reach it. TLS is handled by host nginx.
+  # ──────────────────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Vite bakes these into the bundle at BUILD time. Supply values via
+        # a `.env` file next to this compose file (see .env.example).
+        VITE_SUPABASE_URL:             ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY:        ${VITE_SUPABASE_ANON_KEY}
+        VITE_SPOTIFY_CLIENT_ID:        ${VITE_SPOTIFY_CLIENT_ID}
+        VITE_SPOTIFY_CLIENT_SECRET:    ${VITE_SPOTIFY_CLIENT_SECRET}
+        VITE_CLOUDINARY_CLOUD_NAME:    ${VITE_CLOUDINARY_CLOUD_NAME}
+        VITE_CLOUDINARY_UPLOAD_PRESET: ${VITE_CLOUDINARY_UPLOAD_PRESET}
+    image: htf4-volunteer:latest
+    container_name: htf4-volunteer
+    restart: unless-stopped
+    ports:
+      # Localhost-only binding. Change to "0.0.0.0:8080:80" only if you are
+      # NOT fronting this with a reverse proxy (not recommended — no TLS).
+      - "127.0.0.1:8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
