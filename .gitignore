@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase local/generated folders (keep schema, policies, seed, functions tracked)
+supabase/.temp/
+supabase/.branches/
+supabase/snippets/
