@@ -66,7 +66,25 @@ export default function MealScannerScreen() {
   const readerRef = useRef(null)
   const abortRef  = useRef(null)
 
-  const nfcSupported = typeof window !== 'undefined' && 'NDEFReader' in window
+  // Diagnose why NFC is unavailable (in priority order)
+  const nfcStatus = (() => {
+    if (typeof window === 'undefined') return { ok: false, reason: 'ssr', msg: '' }
+    if (!window.isSecureContext) return {
+      ok: false, reason: 'insecure',
+      msg: 'Web NFC needs HTTPS. Deploy the container or use an HTTPS tunnel — it will not work over http://LAN-IP.',
+    }
+    const ua = navigator.userAgent
+    const isAndroid = /Android/i.test(ua)
+    const isChrome  = /Chrome\/\d+/.test(ua) && !/Edg|SamsungBrowser|Firefox|OPR/i.test(ua)
+    if (!isAndroid) return { ok: false, reason: 'platform', msg: 'Web NFC only works on Android. Use manual entry on iOS/desktop.' }
+    if (!isChrome)  return { ok: false, reason: 'browser',  msg: 'Open this page in Chrome for Android. Firefox / Samsung Internet do not support Web NFC.' }
+    if (!('NDEFReader' in window)) return {
+      ok: false, reason: 'api',
+      msg: 'Your Chrome build does not expose Web NFC. Update Chrome and ensure NFC is enabled in Android settings.',
+    }
+    return { ok: true, reason: 'ok', msg: '' }
+  })()
+  const nfcSupported = nfcStatus.ok
 
   // ── Recent feed ──────────────────────────────────────────────────────────
   const loadRecent = useCallback(async () => {
@@ -281,9 +299,16 @@ export default function MealScannerScreen() {
         {!nfcSupported ? (
           <div className="text-center">
             <div className="text-5xl mb-3">📱</div>
-            <p className="font-headline font-black text-base uppercase italic text-black">NFC Not Supported</p>
+            <p className="font-headline font-black text-base uppercase italic text-black">NFC Unavailable</p>
             <p className="font-body font-bold text-sm text-on-surface-variant mt-2">
-              Web NFC only works in <span className="text-black">Chrome on Android</span>. Use manual entry below.
+              {nfcStatus.msg || 'Web NFC only works in Chrome on Android over HTTPS.'}
+            </p>
+            <p className="font-body text-xs text-outline mt-3">
+              Reason code: <code className="bg-surface-container px-1 rounded">{nfcStatus.reason}</code> ·
+              {' '}secure: <code className="bg-surface-container px-1 rounded">{String(window.isSecureContext)}</code>
+            </p>
+            <p className="font-body text-xs text-on-surface-variant mt-2">
+              You can still use manual entry below.
             </p>
           </div>
         ) : scanning ? (
