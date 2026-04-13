@@ -25,9 +25,29 @@ import HelpRequestsScreen from './screens/volunteer/HelpRequestsScreen'
 import CheckinMonitorScreen from './screens/volunteer/CheckinMonitorScreen'
 
 // ─── Route guards ────────────────────────────────────────────────────────────
+function MissingProfileScreen() {
+  const { signOut } = useAuth()
 
-function Guard({ children, volunteerOnly = false }) {
-  const { user, loading, isVolunteer } = useAuth()
+  return (
+    <div className="min-h-screen flex items-center justify-center p-5">
+      <div className="w-full max-w-md bg-surface border-4 border-black p-7 rounded-3xl drop-block">
+        <h1 className="font-headline font-black text-2xl uppercase italic">Profile Not Found</h1>
+        <p className="font-body font-bold text-sm text-on-surface-variant mt-2">
+          Your team profile is missing. Ask an organizer to seed your team account, then log in again.
+        </p>
+        <button
+          onClick={signOut}
+          className="mt-5 w-full bg-primary-container text-on-primary-container border-4 border-black py-3 font-headline font-black text-base uppercase italic rounded-2xl drop-block active:scale-95"
+        >
+          Sign Out
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Guard({ children, volunteerOnly = false, participantOnly = false }) {
+  const { user, loading, profile, isVolunteer } = useAuth()
 
   if (loading) {
     return (
@@ -38,6 +58,8 @@ function Guard({ children, volunteerOnly = false }) {
   }
 
   if (!user) return <Navigate to="/auth" replace />
+  if (!profile) return <MissingProfileScreen />
+  if (participantOnly && isVolunteer) return <Navigate to="/volunteer" replace />
   if (volunteerOnly && !isVolunteer) return <Navigate to="/home" replace />
   return children
 }
@@ -45,7 +67,15 @@ function Guard({ children, volunteerOnly = false }) {
 // ─── Routes ──────────────────────────────────────────────────────────────────
 
 function AppRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading, profile } = useAuth()
+
+  if (!loading && user && !profile) {
+    return <MissingProfileScreen />
+  }
+
+  const defaultPath = user
+    ? (profile?.role === 'volunteer' || profile?.role === 'admin' ? '/volunteer' : '/home')
+    : '/auth'
 
   if (loading) {
     return (
@@ -58,10 +88,10 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/auth" element={user ? <Navigate to="/home" replace /> : <AuthScreen />} />
+      <Route path="/auth" element={user ? <Navigate to={defaultPath} replace /> : <AuthScreen />} />
 
       {/* Participant — all share the phone-frame layout via nested routing */}
-      <Route element={<Guard><ParticipantLayout /></Guard>}>
+      <Route element={<Guard participantOnly><ParticipantLayout /></Guard>}>
         <Route path="/home"    element={<HomeScreen />} />
         <Route path="/checkin" element={<CheckInScreen />} />
         <Route path="/queue"   element={<SongQueueScreen />} />
@@ -86,7 +116,7 @@ function AppRoutes() {
       <Route path="/admin/*" element={<Navigate to="/volunteer" replace />} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={user ? '/home' : '/auth'} replace />} />
+      <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
   )
 }

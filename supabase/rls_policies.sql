@@ -30,6 +30,9 @@ create policy "profiles: own update"
   with check (
     -- Prevent self-escalation of role
     role = (select role from public.profiles where id = auth.uid())
+    -- Keep identity fields immutable for non-admin self-updates
+    and team_code = (select team_code from public.profiles where id = auth.uid())
+    and team_name = (select team_name from public.profiles where id = auth.uid())
   );
 
 create policy "profiles: admin update all"
@@ -146,10 +149,6 @@ create policy "help: volunteer/admin update"
 -- These apply to the 'event-media' bucket
 -- =============================================================
 
--- Allow authenticated users to upload
--- insert into storage.policies ... (easier via Dashboard)
-
--- SQL equivalent (run in storage schema context):
 /*
 create policy "storage: authenticated upload"
   on storage.objects for insert

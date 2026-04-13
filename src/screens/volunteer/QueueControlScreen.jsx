@@ -24,16 +24,16 @@ function PlayerCard() {
   } = useSpotifyPlayer()
 
   const [position, setPosition] = useState(0)
-  const [volume,   setVol]      = useState(80)
+  const [volume, setVol] = useState(80)
 
   // Track position — extrapolate from playerState timestamp when playing
   useEffect(() => {
     if (!playerState) { setPosition(0); return }
     setPosition(playerState.position)
     if (playerState.paused) return
-    const base  = playerState.position
+    const base = playerState.position
     const start = Date.now()
-    const id    = setInterval(() => setPosition(base + Date.now() - start), 500)
+    const id = setInterval(() => setPosition(base + Date.now() - start), 500)
     return () => clearInterval(id)
   }, [playerState])
 
@@ -193,13 +193,13 @@ function fmtDuration(ms) {
 export default function QueueControlScreen() {
   const toast = useToast()
   const { isConnected, playTrack } = useSpotifyPlayer()
-  const [queue,   setQueue]   = useState([])
+  const [queue, setQueue] = useState([])
   const [loading, setLoading] = useState(true)
 
   const loadQueue = useCallback(async () => {
     const { data } = await supabase
       .from('song_queue')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(team_name)')
       .eq('is_played', false)
       .order('position', { ascending: true })
     if (data) setQueue(data)
@@ -239,7 +239,7 @@ export default function QueueControlScreen() {
   }
 
   const nowPlaying = queue.find(s => s.is_playing) ?? null
-  const upNext     = queue.filter(s => !s.is_playing)
+  const upNext = queue.filter(s => !s.is_playing)
 
   if (loading) return <div className="py-12"><LoadingSpinner /></div>
 
@@ -272,7 +272,7 @@ export default function QueueControlScreen() {
                   <span className="bg-on-primary-container text-primary-container font-headline font-black text-[10px] uppercase italic px-2 py-0.5 rounded-full">♫ Playing</span>
                   <p className="font-headline font-black text-base italic truncate mt-0.5 text-black">{nowPlaying.track_name}</p>
                   <p className="font-body text-sm text-on-surface-variant">{nowPlaying.artist_name}</p>
-                  <p className="font-body text-xs text-outline">{nowPlaying.profiles?.full_name ?? 'Unknown'} · {fmtDuration(nowPlaying.duration_ms)}</p>
+                  <p className="font-body text-xs text-outline">{nowPlaying.profiles?.team_name ?? 'Unknown'} · {fmtDuration(nowPlaying.duration_ms)}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -293,7 +293,7 @@ export default function QueueControlScreen() {
                 <div className="min-w-0 flex-1">
                   <p className="font-headline font-black text-base italic truncate text-black">{song.track_name}</p>
                   <p className="font-body text-sm text-on-surface-variant">{song.artist_name}</p>
-                  <p className="font-body text-xs text-outline">{song.profiles?.full_name ?? 'Unknown'} · {fmtDuration(song.duration_ms)}</p>
+                  <p className="font-body text-xs text-outline">{song.profiles?.team_name ?? 'Unknown'} · {fmtDuration(song.duration_ms)}</p>
                 </div>
               </div>
               <div className="flex gap-2">

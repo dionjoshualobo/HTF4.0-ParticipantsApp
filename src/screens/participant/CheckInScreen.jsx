@@ -13,8 +13,8 @@ export default function CheckInScreen() {
   const [loading, setLoading] = useState(false)
 
   const qrPayload = JSON.stringify({
-    uid:  user?.id ?? '',
-    name: profile?.full_name ?? '',
+    uid: user?.id ?? '',
+    name: profile?.team_name ?? '',
     team: profile?.team_name ?? '',
     code: profile?.team_code ?? '',
   })
@@ -47,7 +47,6 @@ export default function CheckInScreen() {
   }
 
   const INFO = [
-    { label: 'Name', value: profile?.full_name },
     { label: 'Team', value: profile?.team_name },
     { label: 'Code', value: profile?.team_code, mono: true },
   ]

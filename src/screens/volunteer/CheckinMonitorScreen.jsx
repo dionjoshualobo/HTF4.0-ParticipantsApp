@@ -11,7 +11,7 @@ export default function CheckinMonitorScreen() {
   const loadCheckins = useCallback(async () => {
     const { data, count } = await supabase
       .from('checkins')
-      .select('*, profiles(full_name, team_name, team_code)', { count: 'exact' })
+      .select('*, profiles(team_name, team_code)', { count: 'exact' })
       .order('checked_in_at', { ascending: false })
     if (data) setCheckins(data)
     if (count !== null) setTotal(count)
@@ -29,13 +29,12 @@ export default function CheckinMonitorScreen() {
 
   const filtered = search.trim()
     ? checkins.filter(c => {
-        const q = search.toLowerCase()
-        return (
-          c.profiles?.full_name?.toLowerCase().includes(q) ||
-          c.profiles?.team_code?.toLowerCase().includes(q) ||
-          c.profiles?.team_name?.toLowerCase().includes(q)
-        )
-      })
+      const q = search.toLowerCase()
+      return (
+        c.profiles?.team_name?.toLowerCase().includes(q) ||
+        c.profiles?.team_code?.toLowerCase().includes(q)
+      )
+    })
     : checkins
 
   if (loading) return <div className="py-12"><LoadingSpinner /></div>
@@ -70,11 +69,10 @@ export default function CheckinMonitorScreen() {
             <div key={item.id} className="bg-surface border-4 border-black px-4 py-3 rounded-2xl flex items-center gap-3">
               <span className="font-headline font-black text-lg text-outline w-7 flex-shrink-0 text-right">{idx + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="font-headline font-black text-base italic truncate">{item.profiles?.full_name ?? 'Unknown'}</p>
+                <p className="font-headline font-black text-base italic truncate">{item.profiles?.team_name ?? 'Unknown'}</p>
                 <p className="font-body font-bold text-sm text-on-surface-variant">
-                  {item.profiles?.team_name}
                   {item.profiles?.team_code && (
-                    <span className="font-mono text-primary"> · {item.profiles.team_code}</span>
+                    <span className="font-mono text-primary">{item.profiles.team_code}</span>
                   )}
                 </p>
               </div>

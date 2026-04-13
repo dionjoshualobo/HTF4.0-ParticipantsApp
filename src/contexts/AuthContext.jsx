@@ -4,6 +4,11 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
+/** Construct the internal email from a team code */
+function teamEmail(teamCode) {
+  return `${teamCode.trim().toLowerCase()}@htf.local`
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -42,7 +47,12 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [fetchProfile])
 
-  async function signIn(email, password) {
+  /**
+   * Sign in with a team code and password.
+   * Behind the scenes we use Supabase Auth with email = {teamCode}@htf.local.
+   */
+  async function signIn(teamCode, password) {
+    const email = teamEmail(teamCode)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     return { data, error }
   }

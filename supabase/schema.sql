@@ -5,16 +5,17 @@
 
 -- Extensions
 create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
 -- =============================================================
--- PROFILES (extends auth.users)
+-- PROFILES (extends auth.users — one per team/volunteer)
+-- Each team is a single Supabase Auth user with email
+-- {team_code}@htf.local and a pre-shared password.
 -- =============================================================
 create table public.profiles (
   id            uuid references auth.users on delete cascade primary key,
-  full_name     text not null default 'Participant',
-  team_id       text,
-  team_code     text,
-  team_name     text,
+  team_code     text unique not null,
+  team_name     text not null,
   role          text not null default 'participant'
                   check (role in ('participant', 'volunteer', 'admin')),
   checked_in    boolean not null default false,
@@ -22,7 +23,7 @@ create table public.profiles (
   created_at    timestamptz not null default now()
 );
 
-comment on table public.profiles is 'One row per authenticated user. Role controls RBAC.';
+comment on table public.profiles is 'One row per team/volunteer. Role controls RBAC. Teams are pre-seeded, no signup.';
 
 -- =============================================================
 -- CHECK-INS
@@ -35,7 +36,7 @@ create table public.checkins (
   location_lng   double precision
 );
 
-comment on column public.checkins.user_id is 'UNIQUE constraint prevents duplicate check-ins per participant.';
+comment on column public.checkins.user_id is 'UNIQUE constraint prevents duplicate check-ins per team.';
 
 -- =============================================================
 -- SONG QUEUE
@@ -105,35 +106,9 @@ alter publication supabase_realtime add table public.media_items;
 alter publication supabase_realtime add table public.checkins;
 
 -- =============================================================
--- AUTO-CREATE PROFILE ON SIGNUP TRIGGER
--- Picks up full_name + team_id from signInWithOtp data option
+-- NOTE: No auto-create trigger. Teams are pre-seeded via the
+-- seed script (supabase/seed.sql) or manually via SQL Editor.
 -- =============================================================
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  _team_id text;
-begin
-  _team_id := upper(new.raw_user_meta_data->>'team_id');
-  insert into public.profiles (id, full_name, team_id, team_code, team_name)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', 'Participant'),
-    _team_id,
-    _team_id,
-    case when _team_id is not null then 'Team ' || _team_id else null end
-  )
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
 
 -- =============================================================
 -- STORAGE BUCKET
