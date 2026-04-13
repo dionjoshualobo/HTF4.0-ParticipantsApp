@@ -28,10 +28,20 @@ export default function HelpRequestsScreen() {
   const loadRequests = useCallback(async () => {
     const { data, error } = await supabase
       .from('help_requests')
-      .select('*, profiles(team_name, team_code)')
+      .select('*, requester:profiles!help_requests_user_id_fkey(team_name, team_code)')
       .order('created_at', { ascending: false })
+
     if (error) {
-      toast.error('Failed to load help requests')
+      const fallback = await supabase
+        .from('help_requests')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (fallback.error) {
+        toast.error('Failed to load help requests')
+      } else {
+        setAllRequests(fallback.data ?? [])
+      }
     } else {
       setAllRequests(data ?? [])
     }
@@ -125,9 +135,9 @@ export default function HelpRequestsScreen() {
                   </span>
                 </div>
                 <p className="font-body font-bold text-sm">
-                  {req.profiles?.team_name ?? 'Unknown'}
-                  {req.profiles?.team_code && (
-                    <span className="font-mono text-primary"> · {req.profiles.team_code}</span>
+                  {req.requester?.team_name ?? 'Unknown'}
+                  {req.requester?.team_code && (
+                    <span className="font-mono text-primary"> · {req.requester.team_code}</span>
                   )}
                 </p>
                 <p className="font-body text-xs text-on-surface-variant">

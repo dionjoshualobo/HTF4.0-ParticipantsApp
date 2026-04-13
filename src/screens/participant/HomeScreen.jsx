@@ -13,7 +13,7 @@ const OPTIONS = [
   },
   {
     to: '/queue',
-    title: 'Song Que',
+    title: 'Song Queue',
     desc: 'Add songs to the party playlist',
     icon: '♫',
     bg: 'bg-tertiary-container',
@@ -23,7 +23,7 @@ const OPTIONS = [
     to: '/gallery',
     title: 'Gallery',
     desc: 'Share & browse event moments',
-    icon: '⬛',
+    icon: '📸',
     bg: 'bg-secondary-container',
     text: 'text-on-secondary-container',
   },
